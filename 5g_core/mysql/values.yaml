@@ -69,7 +69,7 @@ extraInitContainers: |
 ## A string to add extra environment variables
 # extraEnvVars: |
 #   - name: EXTRA_VAR
-#     value: "extra"
+#     value: "extra"worker
 
 # Optionally specify an array of imagePullSecrets.
 # Secrets must be manually created in the namespace.
@@ -79,8 +79,8 @@ imagePullSecrets:
 
 ## Node selector
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
-nodeSelector:
-  kubernetes.io/hostname: worker
+#nodeSelector:
+#  kubernetes.io/hostname: worker
 
 ## Affinity
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity

@@ -128,5 +128,5 @@ terminationGracePeriodSeconds: 5
 
 nodeSelector: {}
 
-nodeName: worker
+#nodeName: worker
 

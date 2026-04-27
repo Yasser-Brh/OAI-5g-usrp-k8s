@@ -120,8 +120,24 @@ kubectl create namespace 5g
 Clone this repository:
 
 ```bash
-git clone https://github.com/Yasser-Brh/OAI-5g-usrp-k8s
-cd OAI-5g-usrp-k8s
+git clone https://github.com/Yasser-Brh/oai-5g-usrp-k8s
+cd oai-5g-usrp-k8s
+```
+
+If you have a single-node cluster, or if you want to deploy specific network functions on specific nodes without relying on the scheduler:
+
+```bash
+kubectl get nodes
+```
+
+Get the name of the node where you want to deploy your network function, then modify the values.yaml file in each Helm chart of the corresponding function and set:
+```bash
+nodeName: NODE_NAME
+```
+For the MySQL chart only, use instead:
+```bash
+nodeSelector:
+  kubernetes.io/hostname: worker
 ```
 
 ## Deploy the 5G Core
@@ -192,9 +208,25 @@ cd cmake_targets
 
 ### Run the NR-UE
 
+Update the `ue.conf` file:
+```bash
+nano openairinterface5g/targets/PROJECTS/GENERIC-NR-5GC/CONF/ue.conf 
+```
+Then set the following parameters:
+
+```bash
+uicc0 = {
+  imsi = "208950000000031";
+  key = "0C0A34601D4F07677303652C0462535B";
+  opc = "63bfa50ee6523365ff14c1f45f88737d";
+  dnn = "oai";
+  nssai_sst = 1;
+}
+```
 Connect the second USRP B210 to the UE laptop with USB 3.0, then start the UE:
 
 ```bash
+cd openairinterface5g/cmake_targets/ran_build/build
 sudo ./nr-uesoftmodem -C 3604800000 -r 24 --numerology 1 --ssb 24 --ue-fo-compensation -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/ue.conf --log_config.global_log_options level,nocolor,time
 ```
 
