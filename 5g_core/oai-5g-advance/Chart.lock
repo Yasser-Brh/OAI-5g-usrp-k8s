@@ -8,9 +8,6 @@ dependencies:
 - name: oai-nrf
   repository: file://../oai-nrf
   version: v2.1.0
-- name: oai-nrf2
-  repository: file://../oai-nrf2
-  version: v2.1.0
 - name: oai-udr
   repository: file://../oai-udr
   version: v2.1.0
@@ -26,20 +23,8 @@ dependencies:
 - name: oai-smf
   repository: file://../oai-smf
   version: v2.1.0
-- name: oai-smf2
-  repository: file://../oai-smf2
-  version: v2.1.0
-- name: oai-smf3
-  repository: file://../oai-smf3
-  version: v2.1.0
 - name: oai-upf
   repository: file://../oai-upf
-  version: v2.1.0
-- name: oai-upf2
-  repository: file://../oai-upf2
-  version: v2.1.0
-- name: oai-upf3
-  repository: file://../oai-upf3
   version: v2.1.0
 - name: oai-lmf
   repository: file://../oai-lmf

@@ -82,10 +82,7 @@ nfs:
 snssais:
   - &slice1
     sst: 1
-    sd: 000001 # in hex
-  - &slice12
-    sst: 1
-    sd: 000002 # in hex
+
 nrf:
   nrf_name: "OAI-NRF"
 
@@ -103,9 +100,7 @@ smf:
       - sNssai: *slice1
         dnnSmfInfoList:
           - dnn: "oai"
-      - sNssai: *slice12
-        dnnSmfInfoList:
-          - dnn: "oai"
+
   local_subscription_infos:
     - single_nssai: *slice1
       dnn: "oai"
@@ -113,12 +108,7 @@ smf:
         5qi: 5
         session_ambr_ul: "50Mbps"
         session_ambr_dl: "100Mbps"
-    - single_nssai: *slice12
-      dnn: "oai"
-      qos_profile:
-        5qi: 5
-        session_ambr_ul: "50Mbps"
-        session_ambr_dl: "100Mbps"
+
 upf:
   support_features:
     enable_bpf_datapath: no    # If "on": BPF is used as datapath else simpleswitch is used, oai= off
@@ -127,9 +117,6 @@ upf:
   upf_info:
     sNssaiUpfInfoList:
       - sNssai: *slice1
-        dnnUpfInfoList:
-          - dnn: "oai"
-      - sNssai: *slice12
         dnnUpfInfoList:
           - dnn: "oai"
           

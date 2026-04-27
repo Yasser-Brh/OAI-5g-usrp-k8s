@@ -16,6 +16,14 @@ spec:
   template:
     metadata:
       labels:
+        #id: "{{ .Values.id }}" #"1" #1/2
+        #app_ad: "{{ .Values.app_ad }}" #"5" #Slice differentiator
+        #nb_pods: "{{ .Values.nb_pods }}" #"2" #number of pods in the slice
+        {{- include "oai-amf.selectorLabels" . | nindent 8 }}
+      {{- if .Values.annotations }}
+      annotations:
+        {{- toYaml .Values.annotations | nindent 8 }}
+      {{- end }}
         app.kubernetes.io/name: {{ .Chart.Name }}
         app.kubernetes.io/instance: {{ .Chart.Name }}
       {{- if .Values.multus.create }}
@@ -93,7 +101,7 @@ spec:
           defaultMode: 0777
       dnsPolicy: ClusterFirst
       restartPolicy: Always
-      schedulerName: default-scheduler
+      schedulerName: "{{ .Values.schedulerName }}"
       serviceAccountName: {{ .Chart.Name }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- if .Values.nodeSelector}}

@@ -15,6 +15,14 @@ spec:
     metadata:
       labels:
         {{- include "oai-amf.selectorLabels" . | nindent 8 }}
+        #id: "{{ .Values.id }}" #"1" #1/2
+        #app_ad: "{{ .Values.app_ad }}" #"5" #Slice differentiator
+        #nb_pods: "{{ .Values.nb_pods }}" #"2" #number of pods in the slice
+        {{- include "oai-amf.selectorLabels" . | nindent 8 }}
+      {{- if .Values.annotations }}
+      annotations:
+        {{- toYaml .Values.annotations | nindent 8 }}
+      {{- end }}
     {{- if .Values.multus.n2Interface.create }}
       annotations:
         k8s.v1.cni.cncf.io/networks: >-
@@ -171,6 +179,7 @@ spec:
         name: configuration
       dnsPolicy: ClusterFirst
       restartPolicy: Always
+      schedulerName: "{{ .Values.schedulerName }}"
       serviceAccountName: {{ .Chart.Name }}
       terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       {{- if .Values.nodeSelector}}

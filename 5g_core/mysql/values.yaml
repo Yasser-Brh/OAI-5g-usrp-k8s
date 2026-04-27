@@ -79,8 +79,8 @@ imagePullSecrets:
 
 ## Node selector
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
-#nodeSelector:
-#  env: dev
+nodeSelector:
+  kubernetes.io/hostname: worker
 
 ## Affinity
 ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
@@ -239,3 +239,8 @@ initContainer:
     requests:
       memory: 10Mi
       cpu: 10m
+
+#schedulerName: setpodnet-scheduler
+#id: "1" 
+#app_ad: "2" #Slice differentiator
+#nb_pods: "50"

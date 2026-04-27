@@ -23,6 +23,14 @@ spec:
   template:
     metadata:
       labels:
+        #id: "{{ .Values.id }}" #"1" #1/2
+        #app_ad: "{{ .Values.app_ad }}" #"5" #Slice differentiator
+        #nb_pods: "{{ .Values.nb_pods }}" #"2" #number of pods in the slice
+        {{- include "oai-amf.selectorLabels" . | nindent 8 }}
+      {{- if .Values.annotations }}
+      annotations:
+        {{- toYaml .Values.annotations | nindent 8 }}
+      {{- end }}
         app.kubernetes.io/name: {{ template "mysql.fullname" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
 {{- with .Values.podLabels }}

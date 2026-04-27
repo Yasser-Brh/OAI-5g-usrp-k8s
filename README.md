@@ -1,125 +1,235 @@
-# OAI 5G SA Core and Disaggregated RAN Deployment on Kubernetes using Helm Charts – Slicing Scenario
-
-<div align="center">
-    <img src="fig/1_IconsAll_Hori.png" alt="AIDY-F2N">
-</div>
+# OAI 5G SA on Kubernetes with USRP B210
 
 ## Overview
 
-This repository provides a deployment of the OpenAirInterface (OAI) 5G Standalone (SA) Core with network slicing, using a Disaggregated Radio Access Network (RAN) architecture. The RAN includes an OAI Central Unit (CU) split into Control Plane (CU-CP) and User Plane (CU-UP) components, an OAI Distributed Unit (DU), and multiple OAI NR-UEs, each assigned to a specific S-NSSAI (Single Network Slice Selection Assistance Information). Network slicing is applied at the core level, ensuring that different UEs are routed through their respective slices.
+This repository provides an end-to-end OpenAirInterface 5G Standalone deployment on Kubernetes.
 
-A Network Slice consists of 5G Core and 5G RAN components, all defined within a PLMN. A slice is identified using S-NSSAI, which consists of:
+It includes the following components:
 
-- Slice/Service Type (SST): Defines the expected slice behavior (e.g., eMBB, URLLC, mMTC, V2X).
+| Layer | Components |
+|---|---|
+| 5G Core | AMF, SMF, UPF, NRF, UDR, UDM, AUSF, MySQL |
+| RAN | OAI disaggregated gNB: CU-CP, CU-UP, DU |
+| UE | OAI NR-UE softmodem |
+| Radio | USRP B210 |
 
-- Slice Differentiator (SD): Optionally differentiates slices within the same SST.
+The reference radio configuration used in this project is Band n78 with 24 PRB at 3604.8 MHz.
 
-Each UE can connect to up to eight (8) slices simultaneously. SST values range from 0 to 255, with: SST 1 = eMBB, SST 2 = URLLC, SST 3 = mMTC, SST 4 = V2X, SST 5-127: Reserved for experimental use and SST 128-255: Reserved for operators
+## Architecture
 
-![Slicing](fig/slicing.png)
+All network functions run as Kubernetes pods and are deployed with Helm charts.
 
-### **Network Slicing Configuration**
+The RAN uses the standard 3GPP gNB split model:
 
-The slicing structure follows the setup illustrated in the figure above.
+| Interface | Between | Protocol |
+|---|---|---|
+| F1-C | CU-CP and DU | F1AP over SCTP |
+| F1-U | CU-UP and DU | GTP-U over UDP |
+| E1 | CU-CP and CU-UP | E1AP over SCTP |
+| N2 | CU-CP and AMF | NGAP over SCTP |
+| N3 | CU-UP and UPF | GTP-U over UDP |
 
-- **Slice 1 (Blue) [SST=1]**:
-  - **Core Components**: NRF12, SMF1, UPF1
-  - **UEs**: UE1 (via gNB1)
-- **Slice 2 (Red) [SST=2]**:
-  - **Core Components**: NRF12, SMF2, UPF2
-  - **UEs**: UE2 (via gNB1)
-- **Slice 3 (Yellow) [SST=3]**:
-  - **Core Components**: NRF3, SMF3, UPF3
-  - **UEs**: UE3 (via gNB1)
+<div align="center">
+    <img src="fig/architecture.png" alt="OAI 5G SA architecture">
+</div>
 
-The common **AMF, NSSF, UDM, UDR, AUSF** components serve all slices. SMF and UPF in **Slice 1 and Slice 2** share the same NRF, making both UPFs discoverable by both SMFs.
+## Demo Setup
 
-Note that SSTs are only for numerical reference and does not reflect standard SST behaviour e.g. eMBB, URLCC, mMTC, V2X etc.
+The demo setup shown below is the left part of the architecture.
 
-## Contributors
+The RAN components run on a Kubernetes node in Evry. The gNB-side USRP B210 is connected to that node through USB 3.0. The UE-side USRP B210 is connected to a laptop through USB 3.0.
 
-- Yasser BRAHMI, abdenour-yasser.brahmi@telecom-sudparis.eu
-- Massinissa AIT ABA, massinissa.ait-aba@davidson.fr
+Both USRPs are connected with SMA coaxial cables for RF testing. In this setup, attenuators are used on the gNB side to keep the signal level safe and stable.
 
+<div align="center">
+    <img src="fig/demo.jpg" alt="Demo setup">
+</div>
 
-# Build a K8S cluster
-We assume that a Kubernetes cluster is already running using this repository: https://github.com/AIDY-F2N/build-k8s-cluster
+## Radio Parameters
 
-# OAI 5G SA Core
+| Parameter | Value |
+|---|---|
+| Band | n78 |
+| Duplex mode | TDD |
+| DL center ARFCN | 640320 |
+| Point A ARFCN | 640032 |
+| Frequency | 3604.8 MHz |
+| Numerology | 1 |
+| Subcarrier spacing | 30 kHz |
+| PRB | 24 |
+| SSB offset | 24 |
+| USRP | B210 |
 
-We present the different steps to deploy the OAI core. 
+## Prerequisites
 
-1.  Install the Helm CLI usnig this link: https://helm.sh/docs/intro/install/
+Before deployment, make sure you have:
 
-Helm CLI (Command-Line Interface) is a command-line tool used for managing applications on Kubernetes clusters. It is part of the Helm package manager, which helps you package, deploy, and manage applications as reusable units called Helm charts.
+1. A working Kubernetes cluster.
+2. Helm installed.
+3. The Helm Spray plugin installed.
+4. UHD installed on the machines connected to the USRPs.
+5. A Kubernetes namespace for the deployment.
 
-Helm provides a straightforward way to define, install, and upgrade complex Kubernetes applications. With Helm, you can define the desired state of your application using a declarative YAML-based configuration file called a Helm chart. A Helm chart contains all the necessary Kubernetes manifests, configurations, and dependencies required to deploy and run your application.
+### Kubernetes Cluster
 
-2.  Install Helm Spray using this command: 
-```bash[language=bash]
+Cluster setup reference:
+
+https://github.com/AIDY-F2N/k8s-cluster-setup-ubuntu24.git
+
+### Helm
+
+Helm installation guide:
+
+https://helm.sh/docs/intro/install/
+
+Install the Helm Spray plugin:
+
+```bash
 helm plugin install https://github.com/ThalesGroup/helm-spray
 ```
-Helm Spray is a Helm plugin that simplifies the deployment of Kubernetes applications using Helm charts. Helm is a package manager for Kubernetes that allows you to define, install, and manage applications as reusable units called charts. Helm Spray extends Helm's functionality by providing additional features and capabilities for managing the lifecycle of complex deployments. The command helm plugin install installs the Helm Spray plugin, enabling you to use its functionalities alongside Helm.
 
-3. Clone this GitHub repository
-    ```bash[language=bash]
-    git clone https://github.com/k8snetworkplumbingwg/multus-cni.git
-    ```
+### Install UHD
 
-- Apply a daemonset which installs Multus using kubectl. From the root directory of the clone, apply the daemonset YAML file:
-    ```bash[language=bash]
-    kubectl apply -f multus-cni/deployments/multus-daemonset-thick.yml 
+Install UHD on the gNB host and on the UE machine:
 
+```bash
+sudo apt install -y autoconf automake build-essential ccache cmake cpufrequtils doxygen ethtool g++ git inetutils-tools libboost-all-dev libncurses-dev libusb-1.0-0 libusb-1.0-0-dev libusb-dev python3-dev python3-mako python3-numpy python3-requests python3-scipy python3-setuptools python3-ruamel.yaml
 
-    kubectl delete -f ./multus-cni/deployments/multus-daemonset-thick.yml
-
-    ```
-4. Create a namespace where the helm-charts will be deployed, in this tutorial, we deploy them in oai namespace. To create oai namespace use the below command on your cluster: 
-    ```bash[language=bash]
-    kubectl create ns oai
-    ```
-
-5. Clone the following repository:
-```bash[language=bash]
-git clone https://github.com/AIDY-F2N/5G-SA-Split-RAN-Slicing-K8s.git
+git clone https://github.com/EttusResearch/uhd.git ~/uhd
+cd ~/uhd
+git checkout v4.8.0.0
+cd host
+mkdir build
+cd build
+cmake ../
+make -j $(nproc)
+make test
+sudo make install
+sudo ldconfig
+sudo uhd_images_downloader
 ```
-6. Open a terminal inside the folder "5G-SA-Split-RAN-Slicing-K8s", and run the following commands to deploy the OAI core:
-```bash[language=bash]
+
+### Namespace and Repository
+
+Create the namespace:
+
+```bash
+kubectl create namespace 5g
+```
+
+Clone this repository:
+
+```bash
+git clone https://github.com/Yasser-Brh/OAI-5g-usrp-k8s
+cd OAI-5g-usrp-k8s
+```
+
+## Deploy the 5G Core
+
+Update chart dependencies and deploy the core:
+
+```bash
 helm dependency update 5g_core/oai-5g-advance/
-helm install 5gc 5g_core/oai-5g-advance/ -n oai
-```
-The two commands you provided are related to the Helm package manager and are used to manage and deploy Helm charts onto a Kubernetes cluster. 
-After this, run this command to check if the core is deployed: 
-```bash[language=bash]
-kubectl get pods -n oai 
+helm install 5gc 5g_core/oai-5g-advance/ -n 5g
 ```
 
+Check that the core pods are running:
 
-# OAI Disaggregated 5G RAN
-This setup launches the RAN components (OAI CU-CP, CU-UP, and DU) with SST support from 1 to 3, and deploys three OAI nrUEs, each configured with a different SST:
-
-```bash[language=bash]
-helm install cucp 5g_ran/dis_ran_gnb1/oai-cu-cp/ -n oai
-helm install cuup 5g_ran/dis_ran_gnb1/oai-cu-up -n oai
-helm install du 5g_ran/dis_ran_gnb1/oai-du -n oai
-
-helm install nrue1 5g_ran/oai-nr-ue1 -n oai 
-helm install nrue2 5g_ran/oai-nr-ue2 -n oai
+```bash
+kubectl get pods -n 5g
 ```
 
-To check if the UE has an IP address:
+<div align="center">
+    <img src="fig/5gc.png" alt="5G core pods">
+</div>
 
-```bash[language=bash]
-kubectl exec -it -n oai -c nr-ue $(kubectl get pods -n oai | grep oai-nr-ue | awk '{print $1}') -- ifconfig oaitun_ue1 |grep -E '(^|\s)inet($|\s)' | awk {'print $2'}
+## Deploy the RAN
+
+Deploy the RAN components one by one:
+
+```bash
+helm install cucp 5g_ran/oai-cu-cp/ -n 5g
+helm install cuup 5g_ran/oai-cu-up/ -n 5g
 ```
-To test connectivity with a ping:
 
-```bash[language=bash]
-kubectl exec -it -n oai -c nr-ue $(kubectl get pods -n oai | grep oai-nr-ue2 | awk '{print $1}') -- ping -I oaitun_ue1 -c4 google.fr
+Before deploying the DU:
+
+1. Connect the USRP B210 to the Kubernetes node that will run the DU.
+2. If needed, set `nodeName` in `5g_ran/oai-du/values.yaml` to pin the DU pod to the correct node.
+3. Update the B210 serial number in `5g_ran/oai-du/templates/configmap.yaml`.
+
+```bash
+helm install du 5g_ran/oai-du/ -n 5g
 ```
 
-helm install ueransim-gnb 5g_ran/ueransim-gnb2/ -n oai
+Check that all RAN pods are running:
 
-helm install ueransim-ue1 5g_ran/ueransim-ue1/ -n oai
-helm install ueransim-ue2 5g_ran/ueransim-ue2/ -n oai
-helm install ueransim-ue3 5g_ran/ueransim-ue3/ -n oai
+```bash
+kubectl get pods -n 5g | grep -E 'cu-cp|cu-up|du'
+```
+
+<div align="center">
+    <img src="fig/dis-ran.png" alt="Disaggregated RAN pods">
+</div>
+
+## Build and Run the UE
+
+For legal and safe lab testing, use coaxial RF cables and attenuators instead of over-the-air transmission.
+
+In the reference setup, the gNB-side B210 and the UE-side B210 are connected through SMA coaxial cables.
+
+### Build OAI for the UE
+
+```bash
+git clone https://gitlab.eurecom.fr/oai/openairinterface5g.git ~/openairinterface5g
+cd ~/openairinterface5g
+git checkout develop
+
+cd cmake_targets
+./build_oai -I
+./build_oai -w USRP --ninja --nrUE -C
+```
+
+### Run the NR-UE
+
+Connect the second USRP B210 to the UE laptop with USB 3.0, then start the UE:
+
+```bash
+sudo ./nr-uesoftmodem -C 3604800000 -r 24 --numerology 1 --ssb 24 --ue-fo-compensation -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/ue.conf --log_config.global_log_options level,nocolor,time
+```
+
+## Basic Test
+
+Check that the UE tunnel interface exists:
+
+```bash
+ip addr show oaitun_ue1
+```
+
+Test connectivity through the UE tunnel:
+
+```bash
+ping -c 3 -I oaitun_ue1 8.8.8.8
+```
+
+<div align="center">
+    <img src="fig/test.png" alt="Connectivity test">
+</div>
+
+## Known Limitation
+
+### Two B210 devices are not synchronized
+
+If both the gNB and the UE use separate USRP B210 devices, each one relies on its own internal oscillator. Over time, clock drift may appear and cause:
+
+- PBCH decoding errors
+- Radio link failure
+- Loss of the UE tunnel IP address
+
+The recommended solution is to use an external shared clock source such as an Ettus OctoClock-G.
+
+Reference:
+
+https://kb.ettus.com/5G_OAI_End-to-End_Reference_Architecture_with_USRP
+
+Without an external reference clock, short test sessions may still work, but long-term stability is not guaranteed.

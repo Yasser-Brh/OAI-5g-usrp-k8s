@@ -91,13 +91,7 @@ amf:
       tac: 0x0001
       nssai:
         - sst: 1
-          sd: 000001
         - sst: 2
-          sd: 000001
-        - sst: 1
-          sd: 000002
-        - sst: 2
-          sd: 000002
         - sst: 3
   supported_integrity_algorithms:
     - "NIA1"

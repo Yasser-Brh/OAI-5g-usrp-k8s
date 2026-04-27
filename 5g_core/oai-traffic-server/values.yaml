@@ -64,5 +64,9 @@ enabled: true
 terminationGracePeriodSeconds: 2
 
 nodeSelector: {}
+#schedulerName: setpodnet-scheduler
+#id: "1" 
+#app_ad: "2" #Slice differentiator
+#nb_pods: "50"
 
-nodeName: 
+nodeName: worker
